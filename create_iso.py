@@ -2,13 +2,21 @@
 
 import os
 import six
+import sys
 import explodeinstaller
 
 
-ISO_PATH = "/tmp/slackware64-14.2-install-dvd.iso"
-VM_NAME = "slack_vagrant_base"
+def get_vm_name(path):
+    name = os.path.splitext(os.path.basename(path))[0]
+    name = name.replace("-install-dvd", "-vagrant")
+    return name
+
+
+ISO_PATH = sys.argv[1]
+VM_NAME = get_vm_name(ISO_PATH)
 VBOX_SOCKET = "/tmp/vbox"
 temp_dir = "tmp_dir"
+ISO_NAME = VM_NAME + ".iso"
 
 
 # List of packages to remove from the ISO. None of them are needed for an install to
@@ -94,12 +102,14 @@ to_remove = {
 }
 
 
-def get_disk_sets():
+def get_disk_sets(disk_sets_dir):
     """
         Get the list of disk-sets in a distribution, just a count of the directories under slackware64 for now.
     """
     out = []
-    parent = os.path.join(temp_dir,"isofs/slackware64")
+    parent = disk_sets_dir
+    if not os.path.exists(parent):
+        parent = os.path.join(temp_dir, "isofs/slackware")
     for item in os.listdir(parent):
         p = os.path.join(parent, item)
         if os.path.isdir(p):
@@ -107,17 +117,17 @@ def get_disk_sets():
     return out
 
 
-def update_tagfiles():
+def update_tagfiles(disk_sets_dir):
     """
         Update contents of original tagfiles based on the list of packages to skip.
         There's no point to keep the original tagfiles around as this is all generated.
     """
-    for disk_set in get_disk_sets():
+    for disk_set in get_disk_sets(disk_sets_dir):
         if disk_set not in to_remove:
             continue
         removals = to_remove[disk_set]
         out_tags = []
-        p = os.path.join(temp_dir, "isofs/slackware64", disk_set, "tagfile")
+        p = os.path.join(disk_sets_dir, disk_set, "tagfile")
         print("Updating %r" % p)
         if removals is not None:
             removals = removals.split()
@@ -159,6 +169,8 @@ def make_shell_parameters():
     fp = open("includes.sh", "wb")
     fp.write('VM_NAME=%s\n' % VM_NAME)
     fp.write('VBOX_SOCKET=%s\n' % VBOX_SOCKET)
+    fp.write('DISK_NAME=%s.vdi\n' % VM_NAME)
+    fp.write('ISO_NAME=%s\n' % ISO_NAME)
     fp.close()
 
 
@@ -187,16 +199,22 @@ additions_to_extra()
 
 vagrant_pub_key_to_extra()
 
-update_tagfiles()
+
+disk_sets_dir = os.path.join(temp_dir,"isofs/slackware64")
+if not os.path.exists(disk_sets_dir):
+    disk_sets_dir = os.path.join(temp_dir, "isofs/slackware")
+
+update_tagfiles(disk_sets_dir)
 
 CFG="tmp_dir/isofs/isolinux/isolinux.cfg"
 
 data = b"serial 0 115200\n" + open(CFG, "rb").read()
 data = data.replace("SLACK_KERNEL=huge.s", "SLACK_KERNEL=huge.s console=ttyS0")
+data = data.replace("SLACK_KERNEL=hugesmp.s", "SLACK_KERNEL=hugesmp.s console=ttyS0")
 
 open(CFG, "wb").write(data)
 
-explodeinstaller.assemble_all(temp_dir, "generated.iso")
+explodeinstaller.assemble_all(temp_dir, ISO_NAME)
 
 # Setup parameters for the auto-install expect script:
 make_expect_parameters()

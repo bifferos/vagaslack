@@ -12,7 +12,7 @@ VBoxManage modifyvm $VM_NAME --nic1 nat
 VBoxManage modifyvm $VM_NAME --boot1 dvd
 VBoxManage modifyvm $VM_NAME --graphicscontroller vmsvga
 VBoxManage storagectl $VM_NAME --name IDE --add ide
-VBoxManage createmedium disk --filename disk.vdi --size 20480
-VBoxManage storageattach $VM_NAME --storagectl IDE --port 0 --device 0 --type hdd --medium disk.vdi
-VBoxManage storageattach $VM_NAME --storagectl IDE --port 1 --device 0 --type dvddrive --medium generated.iso
+VBoxManage createmedium disk --filename $DISK_NAME --size 20480
+VBoxManage storageattach $VM_NAME --storagectl IDE --port 0 --device 0 --type hdd --medium $DISK_NAME
+VBoxManage storageattach $VM_NAME --storagectl IDE --port 1 --device 0 --type dvddrive --medium $ISO_NAME
 VBoxManage modifyvm $VM_NAME --uart1 0x3f8 4 --uartmode1 server $VBOX_SOCKET
