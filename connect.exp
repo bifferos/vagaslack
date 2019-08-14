@@ -1,0 +1,8 @@
+#!/usr/bin/expect -f
+
+
+spawn socat STDIO,rawer UNIX-CONNECT:/tmp/vbox,forever
+
+interact
+
+
