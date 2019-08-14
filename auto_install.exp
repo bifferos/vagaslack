@@ -243,6 +243,9 @@ expect $prompt
 send "echo \"UseDNS no\" >> /etc/ssh/sshd_config\n"
 expect $prompt
 
+send "exit\n"
+expect $prompt
+
 # power off, wait for shutdown then eject DVD.
 send "poweroff\n"
 
