@@ -1,5 +1,7 @@
 tmp_dir/
+.idea/
 includes.exp
+includes.sh
 disk.vdi
 generated.iso
 *~

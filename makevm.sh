@@ -1,7 +1,6 @@
 #!/bin/sh
 
-VM_NAME=slack_test
-VBOX_SOCKET="/tmp/vbox"
+source ./includes.sh
 
 VBoxManage controlvm $VM_NAME poweroff
 VBoxManage unregistervm $VM_NAME --delete

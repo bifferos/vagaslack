@@ -2,12 +2,11 @@
 
 import os
 import six
-import pycdlib
 import explodeinstaller
 
 
 ISO_PATH = "/tmp/slackware64-14.2-install-dvd.iso"
-VM_NAME = "slack_test"
+VM_NAME = "slack_vagrant_base"
 VBOX_SOCKET = "/tmp/vbox"
 temp_dir = "tmp_dir"
 
@@ -156,6 +155,14 @@ def make_expect_parameters():
     fp.close()
 
 
+def make_shell_parameters():
+    fp = open("includes.sh", "wb")
+    fp.write('VM_NAME=%s\n' % VM_NAME)
+    fp.write('VBOX_SOCKET=%s\n' % VBOX_SOCKET)
+    fp.close()
+
+
+
 def additions_to_extra():
     """Copy the additions into the extra folder"""
     os.system("iso-read -e VBoxLinuxAdditions.run -i /opt/VirtualBox/additions/VBoxGuestAdditions.iso "
@@ -193,3 +200,4 @@ explodeinstaller.assemble_all(temp_dir, "generated.iso")
 
 # Setup parameters for the auto-install expect script:
 make_expect_parameters()
+make_shell_parameters()
