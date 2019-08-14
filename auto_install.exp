@@ -1,0 +1,254 @@
+#!/usr/bin/expect -f
+
+source includes.exp
+
+# Expect a dialog containing given text
+proc expectDlg {txt} {
+    set IN "qq\x1b\\\[0;7m\x0f"
+    set OUT "\x1b\\\[0;7m\x0eqq"
+    expect "$IN$txt$OUT"
+}
+
+proc expectDlgRe {txt} {
+    set IN "qq\x1b\\\[0;7m\x0f"
+    set OUT "\x1b\\\[0;7m\x0eqq"
+    expect -re "$IN$txt$OUT"
+}
+
+set timeout 240
+exec VBoxManage startvm $VM_NAME
+spawn socat STDIO,rawer UNIX-CONNECT:$VBOX_SOCKET,forever
+
+expect "Default kernel will boot in"
+expect "boot: "
+send "\r\n"
+
+expect "Enter 1 to select a keyboard map: "
+send "\n"
+
+expect "slackware login: "
+send "root\n"
+
+set prompt "root@slackware:/# "
+
+expect $prompt 
+send "echo start=2048 | sfdisk /dev/sda\n"
+expect $prompt 
+
+send "setup\n"
+
+# Target partition
+expectDlgRe "Slackware Linux Setup \\\(version .{1,8}\\\)"
+send "t\n"
+
+expectDlg "Select Linux installation partition:"
+send "\n"
+
+expectDlg "FORMAT PARTITION /dev/sda1"
+send "\n"
+
+expectDlg "SELECT FILESYSTEM FOR /dev/sda1"
+send "\n"
+
+expectDlg "DONE ADDING LINUX PARTITIONS TO /etc/fstab"
+send "\n"
+
+expectDlg "SOURCE MEDIA SELECTION"
+send "\n"
+
+expectDlg "SCANNING FOR CD or DVD DRIVE"
+send "\n"
+
+expectDlg "PACKAGE SERIES SELECTION"
+send "\n"
+
+# Full install
+expectDlg "SELECT PROMPTING MODE"
+send "c\n"
+
+expectDlg "ENTER CUSTOM EXTENSION"
+send "\n"
+
+expectDlg "MAKE USB FLASH BOOT"
+send "s\n"
+
+expectDlg "INSTALL LILO"
+send "\n"
+
+expectDlg "CONFIGURE LILO TO USE FRAME BUFFER CONSOLE?"
+send "\n"
+
+expectDlg "OPTIONAL LILO append=\"<kernel parameters>\" LINE"
+send "\n"
+
+expectDlg "USE UTF-8 TEXT CONSOLE?"
+send "\n"
+
+expectDlg "SELECT LILO DESTINATION"
+send "\n"
+
+if { $mouse } {
+  expectDlg "MOUSE CONFIGURATION"
+  send "\t\n"
+}
+
+if { $network } {
+  expectDlg "CONFIGURE NETWORK?"
+  send "\n"
+
+  expectDlg "ENTER HOSTNAME"
+  send "darkstar\n"
+
+  expectDlg "ENTER DOMAINNAME FOR 'darkstar'"
+  send "localnet\n"
+
+  # DHCP
+  expectDlg "CONFIGURATION TYPE FOR 'darkstar.localnet'"
+  send "\n"
+
+  expectDlg "SET DHCP HOSTNAME"
+  send "\n"
+
+  expectDlg "CONFIRM SETUP COMPLETE"
+  send "\n"
+}
+
+expectDlg "CONFIRM STARTUP SERVICES TO RUN"
+send "\n"
+
+expectDlg "CONSOLE FONT CONFIGURATION"
+send "\n"
+
+expectDlg "HARDWARE CLOCK SET TO UTC?"
+send "\n"
+
+# timezone -> GMT
+expectDlg "TIMEZONE CONFIGURATION"
+send "ggg\n"
+
+expectDlg "WARNING: NO ROOT PASSWORD DETECTED"
+send "\n"
+
+expect "New password: "
+send "vagrant\n"
+
+expect "New password: "
+send "vagrant\n"
+
+expect "Re-enter new password: "
+send "vagrant\n"
+
+expect "Press \\\[enter\\\] to continue:"
+send "\n"
+
+expectDlg "SETUP COMPLETE"
+send "\n"
+
+expectDlgRe "Slackware Linux Setup \\\(version .{1,8}\\\)"
+send "\t\n"
+
+expect $prompt
+
+send "chroot /mnt\n"
+expect $prompt
+
+
+# Lilo changes for serial port access
+send "cat /etc/lilo.conf | sed s/1200/10/ | sed \"s/#compact/compact/\" > /etc/lilo.conf_tmp\n"
+expect $prompt
+send "cat /etc/lilo.conf_tmp | sed \"s/utf8=0/utf8=0 console=ttyS0/\" > /etc/lilo.conf\n"
+expect $prompt
+send "lilo\n"
+expect $prompt
+
+# Serial getty to allow serial logins
+send "cat /etc/inittab | sed s/9600/115200/ | sed \"s/#s1/s1/\" > /etc/inittab_tmp\n"
+expect $prompt
+send "mv /etc/inittab_tmp /etc/inittab\n"
+expect $prompt
+
+# Allow root logon on serial port
+send "cat /etc/securetty | sed \"s/#ttyS0/ttyS0/\" > /etc/securetty_tmp\n"
+expect $prompt
+send "mv /etc/securetty_tmp /etc/securetty\n"
+expect $prompt
+
+# Exit chroot
+send "exit\n"
+expect $prompt
+
+# Copy additions to root, so it can be run from there.
+send "cp /var/log/mount/extra/VBoxLinuxAdditions.run /mnt/root/.\n"
+expect $prompt
+# same with pub key
+send "cp /var/log/mount/extra/vagrant.pub /mnt/root/.\n"
+expect $prompt
+
+
+send "chroot /mnt\n"
+expect $prompt
+
+# Message bus needed for Additions to start.
+send "/etc/rc.d/rc.messagebus start\n"
+expect $prompt
+
+# Take snapshot to see which files changes after VBox additions install.
+#if { [catch { exec VBoxManage snapshot $VM_NAME take pre_additions } msg] } {
+#   puts "snapshot taken"
+#}
+
+send "chmod 755 /root/VBoxLinuxAdditions.run\n"
+expect $prompt
+
+# send "touch /root/start_install.txt\n"
+# expect $prompt
+
+send "/root/VBoxLinuxAdditions.run\n"
+expect $prompt
+
+# send "find /opt /lib /sbin /usr /etc -newer /root/start_install.txt > /tmp/new_files.txt\n"
+# expect $prompt
+
+# exec VBoxManage guestcontrol slack_test copyfrom --username root --password vagrant /tmp/new_files.txt new_files.txt
+
+# Setup vagrant user.
+
+send "useradd vagrant\n"
+expect $prompt
+send "mkdir -p /home/vagrant/.ssh\n"
+expect $prompt
+
+send "mv /root/vagrant.pub /home/vagrant/.ssh/authorized_keys\n"
+expect $prompt
+
+send "chown -R vagrant:users /home/vagrant\n"
+expect $prompt
+
+send "chown 0700 /home/vagrant/.ssh\n"
+expect $prompt
+send "chown 0600 /home/vagrant/.ssh/authorized_keys\n"
+expect $prompt
+
+send "passwd vagrant\n"
+expect "New password: "
+send "vagrant\n"
+expect "New password: "
+send "vagrant\n"
+expect "Re-enter new password: "
+send "vagrant\n"
+expect $prompt
+
+send "echo \"vagrant ALL=(ALL) NOPASSWD: ALL\" >> /etc/sudoers\n"
+expect $prompt
+send "echo \"UseDNS no\" >> /etc/ssh/sshd_config\n"
+expect $prompt
+
+# power off, wait for shutdown then eject DVD.
+send "poweroff\n"
+
+expect "reboot: Power down"
+expect eof
+catch wait result
+
+exec VBoxManage storageattach $VM_NAME --storagectl IDE --port 1 --device 0 --type dvddrive --medium emptydrive
+
