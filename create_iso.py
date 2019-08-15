@@ -184,7 +184,7 @@ def additions_to_extra():
 def vagrant_pub_key_to_extra():
     """Copy the additions into the extra folder"""
     os.system("wget https://raw.githubusercontent.com/hashicorp/vagrant/master/keys/vagrant.pub"
-              " -o %s/isofs/extra/vagrant.pub" % temp_dir)
+              " -O %s/isofs/extra/vagrant.pub" % temp_dir)
 
 
 # Adapt a Slackware ISO so it boots over serial port

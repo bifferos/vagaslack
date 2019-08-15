@@ -149,33 +149,32 @@ send "\t\n"
 
 expect $prompt
 
-send "chroot /mnt\n"
-expect $prompt
-
+#send "chroot /mnt\n"
+#expect $prompt
 
 # Lilo changes for serial port access
-send "cat /etc/lilo.conf | sed s/1200/10/ | sed \"s/#compact/compact/\" > /etc/lilo.conf_tmp\n"
-expect $prompt
-send "cat /etc/lilo.conf_tmp | sed \"s/utf8=0/utf8=0 console=ttyS0/\" > /etc/lilo.conf\n"
-expect $prompt
-send "lilo\n"
-expect $prompt
+#send "cat /etc/lilo.conf | sed s/1200/10/ | sed \"s/#compact/compact/\" > /etc/lilo.conf_tmp\n"
+#expect $prompt
+#send "cat /etc/lilo.conf_tmp | sed \"s/utf8=0/utf8=0 console=ttyS0/\" > /etc/lilo.conf\n"
+#expect $prompt
+#send "lilo\n"
+#expect $prompt
 
 # Serial getty to allow serial logins
-send "cat /etc/inittab | sed s/9600/115200/ | sed \"s/#s1/s1/\" > /etc/inittab_tmp\n"
-expect $prompt
-send "mv /etc/inittab_tmp /etc/inittab\n"
-expect $prompt
+#send "cat /etc/inittab | sed s/9600/115200/ | sed \"s/#s1/s1/\" > /etc/inittab_tmp\n"
+#expect $prompt
+#send "mv /etc/inittab_tmp /etc/inittab\n"
+#expect $prompt
 
 # Allow root logon on serial port
-send "cat /etc/securetty | sed \"s/#ttyS0/ttyS0/\" > /etc/securetty_tmp\n"
-expect $prompt
-send "mv /etc/securetty_tmp /etc/securetty\n"
-expect $prompt
+#send "cat /etc/securetty | sed \"s/#ttyS0/ttyS0/\" > /etc/securetty_tmp\n"
+#expect $prompt
+#send "mv /etc/securetty_tmp /etc/securetty\n"
+#expect $prompt
 
 # Exit chroot
-send "exit\n"
-expect $prompt
+#send "exit\n"
+#expect $prompt
 
 # Copy additions to root, so it can be run from there.
 send "cp /var/log/mount/extra/VBoxLinuxAdditions.run /mnt/root/.\n"
@@ -183,7 +182,6 @@ expect $prompt
 # same with pub key
 send "cp /var/log/mount/extra/vagrant.pub /mnt/root/.\n"
 expect $prompt
-
 
 send "chroot /mnt\n"
 expect $prompt
@@ -253,5 +251,8 @@ expect "reboot: Power down"
 expect eof
 catch wait result
 
+# Eject the cdrom
 exec VBoxManage storageattach $VM_NAME --storagectl IDE --port 1 --device 0 --type dvddrive --medium emptydrive
+# The UART is no longer needed.
+exec VBoxManage modifyvm $VM_NAME --uart1 off
 
