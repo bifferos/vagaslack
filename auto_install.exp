@@ -222,9 +222,9 @@ expect $prompt
 send "chown -R vagrant:users /home/vagrant\n"
 expect $prompt
 
-send "chown 0700 /home/vagrant/.ssh\n"
+send "chmod 0700 /home/vagrant/.ssh\n"
 expect $prompt
-send "chown 0600 /home/vagrant/.ssh/authorized_keys\n"
+send "chmod 0600 /home/vagrant/.ssh/authorized_keys\n"
 expect $prompt
 
 send "passwd vagrant\n"
@@ -240,6 +240,15 @@ send "echo \"vagrant ALL=(ALL) NOPASSWD: ALL\" >> /etc/sudoers\n"
 expect $prompt
 send "echo \"UseDNS no\" >> /etc/ssh/sshd_config\n"
 expect $prompt
+
+# Lilo changes for faster boot
+send "cat /etc/lilo.conf | sed s/1200/10/ | sed \"s/#compact/compact/\" > /etc/lilo.conf_tmp\n"
+expect $prompt
+send "mv /etc/lilo.conf_tmp /etc/lilo.conf\n"
+expect $prompt
+send "lilo\n"
+expect $prompt
+
 
 send "exit\n"
 expect $prompt

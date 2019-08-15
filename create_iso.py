@@ -14,7 +14,7 @@ def get_vm_name(path):
 
 ISO_PATH = sys.argv[1]
 VM_NAME = get_vm_name(ISO_PATH)
-VBOX_SOCKET = "/tmp/vbox"
+VBOX_SOCKET = "/tmp/%s" % VM_NAME
 temp_dir = "tmp_dir"
 ISO_NAME = VM_NAME + ".iso"
 
