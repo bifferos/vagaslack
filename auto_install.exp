@@ -15,7 +15,7 @@ proc expectDlgRe {txt} {
     expect -re "$IN$txt$OUT"
 }
 
-set timeout 240
+set timeout 500
 exec VBoxManage startvm $VM_NAME
 spawn socat STDIO,rawer UNIX-CONNECT:$VBOX_SOCKET,forever
 
@@ -81,8 +81,10 @@ send "\n"
 expectDlg "OPTIONAL LILO append=\"<kernel parameters>\" LINE"
 send "\n"
 
-expectDlg "USE UTF-8 TEXT CONSOLE?"
-send "\n"
+if { $utf8lilo } {
+  expectDlg "USE UTF-8 TEXT CONSOLE?"
+  send "\n"
+}
 
 expectDlg "SELECT LILO DESTINATION"
 send "\n"
@@ -104,7 +106,7 @@ if { $network } {
 
   # DHCP
   expectDlg "CONFIGURATION TYPE FOR 'darkstar.localnet'"
-  send "\n"
+  send "d\n"
 
   expectDlg "SET DHCP HOSTNAME"
   send "\n"

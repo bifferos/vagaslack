@@ -17,6 +17,7 @@ import json
 import datetime
 import six
 import initrd
+import sys
 
 
 # The location of any initrd images is specific to each distribution and bootloader.  Since these are simply
@@ -107,9 +108,11 @@ def extract_all(iso_file, out_dir):
 
 
 def determine_boot(file_path):
+    print("file_path: %s" % file_path)
     isolinux = os.path.join(file_path, "isolinux")
-
-    if os.path.exists(os.path.join(isolinux, 'efiboot.img')):
+    efi = os.path.join(isolinux, 'efiboot.img')
+    print("efi: %s" % efi)
+    if os.path.exists(efi):
         return 'isolinux/efiboot.img'
     
     if os.path.exists(os.path.join(isolinux, 'isolinux.boot')):
@@ -118,12 +121,12 @@ def determine_boot(file_path):
     raise ValueError("can't determine boot file")
 
 
-
 def make_iso_fs(file_path, iso_name):
-    iso_rel = os.path.join("..", "..", iso_name)
+    iso_abs = os.path.abspath(iso_name)
+    print("iso_abs %s" % iso_abs)
 
     command = [
-        'mkisofs', '-o', iso_rel, '-R', '-J', '-V', 'explode installer',
+        'mkisofs', '-o', iso_abs, '-R', '-J', '-V', 'explode installer',
         '-hide-rr-moved', '-hide-joliet-trans-tbl',
         '-v', '-d', '-N', '-no-emul-boot', '-boot-load-size', '4', '-boot-info-table',
         '-b', 'isolinux/isolinux.bin',
