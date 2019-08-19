@@ -4,6 +4,5 @@ will be installed.  A non-existent file means no packages in that disk set
 will be installed.
 
 
-None of them are needed for an install to Virtualbox.  The kernel is kept only
-because it's needed to compile the guest additions.
+The kernel is included because it's needed to compile the guest additions.
 VBoxLinuxAdditions.run requires perl, bzip2, /l/gc-7.4.2- libffi, libunistr, libmpc, dbus
