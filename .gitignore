@@ -5,3 +5,4 @@ includes.sh
 disk.vdi
 generated.iso
 *~
+*.pyc
