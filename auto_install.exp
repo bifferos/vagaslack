@@ -69,8 +69,10 @@ send "c\n"
 expectDlg "ENTER CUSTOM EXTENSION"
 send "\n"
 
+
 expectDlg "MAKE USB FLASH BOOT"
 send "s\n"
+
 
 expectDlg "INSTALL LILO"
 send "\n"
@@ -188,31 +190,20 @@ expect $prompt
 send "chroot /mnt\n"
 expect $prompt
 
-# Message bus needed for Additions to start.
-send "/etc/rc.d/rc.messagebus start\n"
-expect $prompt
 
-# Take snapshot to see which files changes after VBox additions install.
-#if { [catch { exec VBoxManage snapshot $VM_NAME take pre_additions } msg] } {
-#   puts "snapshot taken"
-#}
+if { $additions } {
+  # Message bus needed for Additions to start.
+  send "/etc/rc.d/rc.messagebus start\n"
+  expect $prompt
 
-send "chmod 755 /root/VBoxLinuxAdditions.run\n"
-expect $prompt
+  send "chmod 755 /root/VBoxLinuxAdditions.run\n"
+  expect $prompt
 
-# send "touch /root/start_install.txt\n"
-# expect $prompt
-
-send "/root/VBoxLinuxAdditions.run\n"
-expect $prompt
-
-# send "find /opt /lib /sbin /usr /etc -newer /root/start_install.txt > /tmp/new_files.txt\n"
-# expect $prompt
-
-# exec VBoxManage guestcontrol slack_test copyfrom --username root --password vagrant /tmp/new_files.txt new_files.txt
+  send "/root/VBoxLinuxAdditions.run\n"
+  expect $prompt
+}
 
 # Setup vagrant user.
-
 send "useradd vagrant\n"
 expect $prompt
 send "mkdir -p /home/vagrant/.ssh\n"
@@ -256,7 +247,7 @@ send "exit\n"
 expect $prompt
 
 # power off, wait for shutdown then eject DVD.
-send "poweroff\n"
+send "poweroff -f\n"
 
 expect "reboot: Power down"
 expect eof

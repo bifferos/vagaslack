@@ -18,7 +18,8 @@ def get_vm_name(path):
     return name
 
 
-
+# Change to false to avoid compile of additions.
+ADDITIONS = True
 ISO_PATH = sys.argv[1]
 VM_NAME = get_vm_name(ISO_PATH)
 VBOX_SOCKET = "/tmp/%s" % VM_NAME
@@ -56,18 +57,22 @@ def update_tagfiles(disk_sets_dir):
         open(p, "wb").write("\n".join(out_tags).encode("utf-8"))
 
 
-def is_included(name):
+def is_included(disk_set, name):
     """
         Find if the package is SKP.
     :param name: name of package
     :return: True/False
     """
-    for disk_set in DISK_SETS:
-        p = os.path.join("remove_tags", disk_set)
-        if os.path.exists(p):
-            if name in open(p, "rb").read().split():
-                return False
-    return True
+    wild = os.path.join(TEMP_DIR, "isofs", "slackware*", disk_set, "tagfile")
+    poss = glob.glob(wild)
+    if len(poss) != 1:
+        raise ValueError("unable to find tagfile for %s series" % disk_set)
+
+    name += ":"
+    for line in open(poss[0], "rb").readlines():
+        if line.startswith(name):
+            return line.strip() == (name + "ADD")
+    raise ValueError("%s unknown package name in %s series" % (name, disk_set))
 
 
 def open_package_tarfile(name):
@@ -85,7 +90,7 @@ def check_lilo_utf8():
     poss = glob.glob(wild)
     if len(poss) != 1:
         raise ValueError("unable to find lilo package in A disk series")
-    name = glob.glob(wild)[0]
+    name = poss[0]
     tf = open_package_tarfile(name)
     data = tf.extractfile("sbin/liloconfig").read()
     if data.find(b'USE UTF-8 TEXT CONSOLE?') != -1:
@@ -99,12 +104,13 @@ def make_expect_parameters():
     fp = open("includes.exp", "wb")
     fp.write(b'set VM_NAME "%s"\n' % VM_NAME.encode("utf-8"))
     fp.write(b'set VBOX_SOCKET "%s"\n' % VBOX_SOCKET.encode("utf-8"))
-    mouse = is_included("gpm")
+    mouse = is_included("a", "gpm")
     fp.write(b'set mouse %s\n' % str(mouse).lower().encode("utf-8"))
-    network = is_included("net-tools")
+    network = is_included("n", "net-tools")
     fp.write(b'set network %s\n' % str(network).lower().encode("utf-8"))
     utf8lilo = check_lilo_utf8()
     fp.write(b'set utf8lilo %s\n' % str(utf8lilo).lower().encode("utf-8"))
+    fp.write(b'set additions %s\n' % str(ADDITIONS).lower().encode("utf-8"))
     fp.close()
 
 

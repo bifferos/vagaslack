@@ -4,4 +4,5 @@ jfsutils kernel-generic lha libcgroup lrzip lvm2 mcelog mdadm minicom mkinitrd m
 ncompress ntfs-3g os-prober patch pciutils pcmciautils quota reiserfsprogs rpm2tgz sdparm
 sharutils slocate smartmontools splitvt tcsh unarj upower usb_modeswitch usbutils
 utempter xfsprogs zoo
-f2fs-tools haveged lbzip2
+f2fs-tools haveged lbzip2 gpm
+
