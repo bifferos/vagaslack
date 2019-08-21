@@ -2,4 +2,4 @@ bison ccache clisp cmake cscope cvs Cython dev86 distcc doxygen flex
 gcc-gfortran gcc-gnat gcc-go gcc-objc gcc-java git gnu-cobol gperf help2man
 indent llvm mercurial nasm oprofile p2c pmake rcs ruby scons slacktrack strace
 subversion swig yasm
-gdb gnucobol guile icecream python3 rust scons
+

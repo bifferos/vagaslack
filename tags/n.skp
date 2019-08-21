@@ -2,7 +2,7 @@ alpine autofs biff+comsat bind bluez bluez-firmware bootp bsd-finger ca-certific
 cifs-utils conntrack-tools crda cyrus-sasl dhcp dirmngr ebtables elm epic5 fetchmail 
 gnupg2 gnupg gnutils gpa gpgme htdig httpd icmpinfo idnkit iftop imapd inetd ipset 
 iptraf-ng ipw2100-fw ipw2100-fw irssi iw lftp libassuan libgcrypt libgpg-error libksba 
-libmbim libmnl libndp libnetfilter_acct libnetfilter_conntrack libnetfilter_cthelper 
+libmbim libndp libnetfilter_acct libnetfilter_conntrack libnetfilter_cthelper
 libnetfilter_cttimeout libnetfilter_log libnetfilter_queue libnfnetlink libnftnl 
 libqmi libtirpc links lynx mailx mcabber metamail mobile-broadband-provider-info 
 ModemManager mtr mutt nc ncftp net-snmp netatalk netkit-bootparamd netkit-ftp netkit-ntalk 

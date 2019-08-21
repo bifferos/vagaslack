@@ -18,6 +18,14 @@ def get_vm_name(path):
     return name
 
 
+def get_tag_name(path):
+    name = os.path.splitext(os.path.basename(path))[0]
+    name = name.replace("-install-dvd", "")
+    return name
+
+
+
+ADDITIONS_ISO = "/tmp/VBoxGuestAdditions_6.0.97-132760.iso"
 # Change to false to avoid compile of additions.
 ADDITIONS = True
 ISO_PATH = sys.argv[1]
@@ -26,15 +34,21 @@ VBOX_SOCKET = "/tmp/%s" % VM_NAME
 TEMP_DIR = "/ram/" + VM_NAME + "_tmp"
 ISO_NAME = "/ram/" + VM_NAME + ".iso"
 DISK_NAME = "/ram/" + VM_NAME + ".vdi"
+SUPP_TAG_NAME = get_tag_name(ISO_PATH)
 # These are all the disk sets, not related to any one version.
 DISK_SETS = "a ap d e f k kde kdei l n t tcl x xap xfce y".split()
 
 
 def get_disk_set_removals(disk_set):
-    path = os.path.join("remove_tags", disk_set)
-    if not os.path.exists(path):
-        return None
-    return [i.decode("utf-8") for i in open(path, "rb").read().split()]
+    primary = os.path.join("tags", disk_set + ".skp")
+    supplemental = os.path.join("tags", disk_set,  SUPP_TAG_NAME + ".skp")
+    total = []
+    found = False
+    for name in [primary, supplemental]:
+        if os.path.exists(name):
+            found = True
+            total += open(name, "rb").read().split()
+    return total if found else None
 
 
 def update_tagfiles(disk_sets_dir):
@@ -49,7 +63,6 @@ def update_tagfiles(disk_sets_dir):
         print("Updating %r" % p)
         for line in open(p).readlines():
             name = line.split(":")[0]
-            print(name)
             if (removals is None) or (name in removals):
                 out_tags.append(name + ":SKP")
             else:
@@ -99,7 +112,6 @@ def check_lilo_utf8():
         return False
 
 
-
 def make_expect_parameters():
     fp = open("includes.exp", "wb")
     fp.write(b'set VM_NAME "%s"\n' % VM_NAME.encode("utf-8"))
@@ -120,14 +132,15 @@ def make_shell_parameters():
     fp.write(b'VBOX_SOCKET=%s\n' % VBOX_SOCKET.encode("utf-8"))
     fp.write(b'DISK_NAME=%s\n' % DISK_NAME.encode("utf-8"))
     fp.write(b'ISO_NAME=%s\n' % ISO_NAME.encode("utf-8"))
+    fp.write(b'TEMP_DIR=%s\n' % TEMP_DIR.encode("utf-8"))
     fp.close()
 
 
 
 def additions_to_extra():
     """Copy the additions into the extra folder"""
-    os.system("iso-read -e VBoxLinuxAdditions.run -i /opt/VirtualBox/additions/VBoxGuestAdditions.iso "
-              "-o %s/isofs/extra/VBoxLinuxAdditions.run" % TEMP_DIR)
+    os.system("iso-read -e VBoxLinuxAdditions.run -i %s "
+              "-o %s/isofs/extra/VBoxLinuxAdditions.run" % (ADDITIONS_ISO, TEMP_DIR))
 
 
 def vagrant_pub_key_to_extra():

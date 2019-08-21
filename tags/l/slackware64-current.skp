@@ -1,0 +1,30 @@
+SDL2 SDL2_gfx SDL2_image SDL2_mixer
+SDL2_net SDL2_ttf argon2 ffmpeg fluidsynth
+gexiv2
+graphite2
+gst-plugins-libav
+id3lib
+imagemagick
+jansson
+jmtpfs
+json-glib
+lame
+libbluray
+libclc
+libedit
+libidn2
+libopusenc
+libpsl
+libsoduim
+libunwind
+libwebp
+lmdb
+mzjs52
+ocl-idc
+opus
+opusfile
+pcre2
+speex
+tdb
+utf8proc
+zstd
