@@ -6,8 +6,7 @@ import sys
 import glob
 import tarfile
 import explodeinstaller
-import contextlib
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, check_call
 
 from backports import lzma
 
@@ -22,7 +21,6 @@ def get_tag_name(path):
     name = os.path.splitext(os.path.basename(path))[0]
     name = name.replace("-install-dvd", "")
     return name
-
 
 
 ADDITIONS_ISO = "/tmp/VBoxGuestAdditions_6.0.97-132760.iso"
@@ -57,9 +55,12 @@ def update_tagfiles(disk_sets_dir):
         There's no point to keep the original tagfiles around as this is all generated.
     """
     for disk_set in DISK_SETS:
+        disk_set_subdir = os.path.join(disk_sets_dir, disk_set)
+        if not os.path.exists(disk_set_subdir):
+            continue
         removals = get_disk_set_removals(disk_set)
         out_tags = []
-        p = os.path.join(disk_sets_dir, disk_set, "tagfile")
+        p = os.path.join(disk_set_subdir, "tagfile")
         print("Updating %r" % p)
         for line in open(p).readlines():
             name = line.split(":")[0]
@@ -99,7 +100,7 @@ def open_package_tarfile(name):
 
 
 def check_lilo_utf8():
-    wild = os.path.join(TEMP_DIR, "isofs", "slackware*", "a", "lilo*.txz")
+    wild = os.path.join(TEMP_DIR, "isofs", "slackware*", "a", "lilo-*.t?z")
     poss = glob.glob(wild)
     if len(poss) != 1:
         raise ValueError("unable to find lilo package in A disk series")
@@ -136,7 +137,6 @@ def make_shell_parameters():
     fp.close()
 
 
-
 def additions_to_extra():
     """Copy the additions into the extra folder"""
     os.system("iso-read -e VBoxLinuxAdditions.run -i %s "
@@ -147,6 +147,27 @@ def vagrant_pub_key_to_extra():
     """Copy the additions into the extra folder"""
     os.system("wget https://raw.githubusercontent.com/hashicorp/vagrant/master/keys/vagrant.pub"
               " -O %s/isofs/extra/vagrant.pub" % TEMP_DIR)
+
+
+def zerofree_to_extra():
+    """Copy to the extra folder"""
+    os.system("cp /usr/sbin/zerofree %s/isofs/extra/zerofree" % TEMP_DIR)
+
+
+def boot_on_serial():
+    CFG=os.path.join(TEMP_DIR, "isofs/isolinux/isolinux.cfg")
+    data = b"serial 0 115200\n" + open(CFG, "rb").read()
+    data = data.replace(b"SLACK_KERNEL=huge.s", b"SLACK_KERNEL=huge.s console=ttyS0")
+    data = data.replace(b"SLACK_KERNEL=hugesmp.s", b"SLACK_KERNEL=hugesmp.s console=ttyS0")
+    open(CFG, "wb").write(data)
+
+
+def remove_boot_timeout():
+    CFG=os.path.join(TEMP_DIR, "isofs/isolinux/isolinux.cfg")
+    data = open(CFG, "rb").read()
+    data = data.replace("timeout 1200\n", "timeout 10\n", 1)    
+    open(CFG, "wb").write(data)
+    
 
 
 # Adapt a Slackware ISO so it boots over serial port
@@ -161,6 +182,7 @@ additions_to_extra()
 
 vagrant_pub_key_to_extra()
 
+zerofree_to_extra()
 
 disk_sets_dir = os.path.join(TEMP_DIR, "isofs/slackware64")
 if not os.path.exists(disk_sets_dir):
@@ -168,16 +190,14 @@ if not os.path.exists(disk_sets_dir):
 
 update_tagfiles(disk_sets_dir)
 
-CFG=os.path.join(TEMP_DIR, "isofs/isolinux/isolinux.cfg")
+remove_boot_timeout()
 
-data = b"serial 0 115200\n" + open(CFG, "rb").read()
-data = data.replace(b"SLACK_KERNEL=huge.s", b"SLACK_KERNEL=huge.s console=ttyS0")
-data = data.replace(b"SLACK_KERNEL=hugesmp.s", b"SLACK_KERNEL=hugesmp.s console=ttyS0")
-
-open(CFG, "wb").write(data)
+check_call("./installpkg_initrd.py")
+# boot_on_serial()
 
 explodeinstaller.assemble_all(TEMP_DIR, ISO_NAME)
 
 # Setup parameters for the auto-install expect script:
 make_expect_parameters()
 make_shell_parameters()
+

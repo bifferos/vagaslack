@@ -1,0 +1,137 @@
+#!/usr/bin/expect -f
+
+
+set mouse false
+set network true
+set utf8lilo true
+set additions true
+
+
+# Expect a dialog containing given text
+proc expectDlg {txt} {
+    set IN "qq\x1b\\\[0;7m\x0f"
+    set OUT "\x1b\\\[0;7m\x0eqq"
+    expect "$txt"
+}
+
+proc expectDlgRe {txt} {
+    set IN "qq\x1b\\\[0;7m\x0f"
+    set OUT "\x1b\\\[0;7m\x0eqq"
+    expect -re "$txt"
+}
+
+set timeout 500
+spawn "setup"
+
+# Target partition
+expectDlgRe "Slackware Linux Setup \\\(version .{1,8}\\\)"
+send "t\n"
+
+expectDlg "Select Linux installation partition:"
+send "\n"
+
+expectDlg "FORMAT PARTITION /dev/sda1"
+send "\n"
+
+expectDlg "SELECT FILESYSTEM FOR /dev/sda1"
+send "\n"
+
+expectDlg "DONE ADDING LINUX PARTITIONS TO /etc/fstab"
+send "\n"
+
+expectDlg "SOURCE MEDIA SELECTION"
+send "\n"
+
+expectDlg "SCANNING FOR CD or DVD DRIVE"
+send "\n"
+
+expectDlg "PACKAGE SERIES SELECTION"
+send "\n"
+
+# Full install
+expectDlg "SELECT PROMPTING MODE"
+send "c\n"
+
+expectDlg "ENTER CUSTOM EXTENSION"
+send "\n"
+
+expectDlg "MAKE USB FLASH BOOT"
+send "s\n"
+
+expectDlg "INSTALL LILO"
+send "\n"
+
+expectDlg "CONFIGURE LILO TO USE FRAME BUFFER CONSOLE?"
+send "\n"
+
+expectDlg "OPTIONAL LILO append=\"<kernel parameters>\" LINE"
+send "\n"
+
+if { $utf8lilo } {
+  expectDlg "USE UTF-8 TEXT CONSOLE?"
+  send "\n"
+}
+
+expectDlg "SELECT LILO DESTINATION"
+send "\n"
+
+if { $mouse } {
+  expectDlg "MOUSE CONFIGURATION"
+  send "\t\n"
+}
+
+if { $network } {
+  expectDlg "CONFIGURE NETWORK?"
+  send "\n"
+
+  expectDlg "ENTER HOSTNAME"
+  send "darkstar\n"
+
+  expectDlg "ENTER DOMAINNAME FOR 'darkstar'"
+  send "localnet\n"
+
+  # DHCP
+  expectDlg "CONFIGURATION TYPE FOR 'darkstar.localnet'"
+  send "d\n"
+
+  expectDlg "SET DHCP HOSTNAME"
+  send "\n"
+
+  expectDlg "CONFIRM SETUP COMPLETE"
+  send "\n"
+}
+
+expectDlg "CONFIRM STARTUP SERVICES TO RUN"
+send "\n"
+
+expectDlg "CONSOLE FONT CONFIGURATION"
+send "\n"
+
+expectDlg "HARDWARE CLOCK SET TO UTC?"
+send "\n"
+
+# timezone -> GMT
+expectDlg "TIMEZONE CONFIGURATION"
+send "ggg\n"
+
+expectDlg "WARNING: NO ROOT PASSWORD DETECTED"
+send "\n"
+
+expect "New password: "
+send "vagrant\n"
+
+expect "New password: "
+send "vagrant\n"
+
+expect "Re-enter new password: "
+send "vagrant\n"
+
+expect "Press \\\[enter\\\] to continue:"
+send "\n"
+
+expectDlg "SETUP COMPLETE"
+send "\n"
+
+expectDlgRe "Slackware Linux Setup \\\(version .{1,8}\\\)"
+send "\t\n"
+

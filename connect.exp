@@ -1,7 +1,8 @@
 #!/usr/bin/expect -f
 
+source includes.exp
 
-spawn socat STDIO,rawer UNIX-CONNECT:/tmp/vbox,forever
+spawn socat STDIO,rawer UNIX-CONNECT:$VBOX_SOCKET,forever
 
 interact
 

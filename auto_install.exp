@@ -19,7 +19,6 @@ set timeout 500
 exec VBoxManage startvm $VM_NAME
 spawn socat STDIO,rawer UNIX-CONNECT:$VBOX_SOCKET,forever
 
-expect "Default kernel will boot in"
 expect "boot: "
 send "\r\n"
 
@@ -30,10 +29,10 @@ expect "slackware login: "
 send "root\n"
 
 set prompt "root@slackware:/# "
+expect $prompt
 
-expect $prompt 
 send "echo start=2048 | sfdisk /dev/sda\n"
-expect $prompt 
+expect $prompt
 
 send "setup\n"
 
@@ -69,10 +68,8 @@ send "c\n"
 expectDlg "ENTER CUSTOM EXTENSION"
 send "\n"
 
-
 expectDlg "MAKE USB FLASH BOOT"
 send "s\n"
-
 
 expectDlg "INSTALL LILO"
 send "\n"
@@ -190,7 +187,6 @@ expect $prompt
 send "chroot /mnt\n"
 expect $prompt
 
-
 if { $additions } {
   # Message bus needed for Additions to start.
   send "/etc/rc.d/rc.messagebus start\n"
@@ -199,8 +195,8 @@ if { $additions } {
   send "chmod 755 /root/VBoxLinuxAdditions.run\n"
   expect $prompt
 
-  send "/root/VBoxLinuxAdditions.run\n"
-  expect $prompt
+#  send "/root/VBoxLinuxAdditions.run\n"
+#  expect $prompt
 }
 
 # Setup vagrant user.
