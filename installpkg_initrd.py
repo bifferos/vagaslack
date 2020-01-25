@@ -75,7 +75,7 @@ def add_file_to_initrd(initrd_root, path, data):
 
 def install(package, initrd_root):
     cfg = get_config()
-    pkg_root = os.path.join(cfg["TEMP_DIR"], "isofs", "slackware")
+    pkg_root = os.path.join(cfg["TEMP_DIR"], "isofs", cfg["PKG_DIR"])
     initrd = os.path.join(cfg["TEMP_DIR"], initrd_root)
     rex = re.compile(r"^(?P<name>.*)-(?P<version>.*)-(?P<arch>.*)-(?P<build>.*)\.txz$")
     for root, dirs, names in os.walk(pkg_root):
@@ -105,7 +105,7 @@ def set_startup_script(initrd_root):
 
 def install_all(initrd):
     for package in open("initrd_packages.txt").read().split():
-        print("installing %r" % initrd)
+        print("installing %r to  %r" % (package, initrd))
         install(package, initrd)
 
     set_startup_script(initrd)

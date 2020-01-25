@@ -1,5 +1,4 @@
 #!/usr/bin/env python2
-
 import os
 import six
 import sys
@@ -23,7 +22,7 @@ def get_tag_name(path):
     return name
 
 
-ADDITIONS_ISO = "/tmp/VBoxGuestAdditions_6.0.97-132760.iso"
+ADDITIONS_ISO = "/opt/VirtualBox/additions/VBoxGuestAdditions.iso"
 # Change to false to avoid compile of additions.
 ADDITIONS = True
 ISO_PATH = sys.argv[1]
@@ -33,6 +32,8 @@ TEMP_DIR = "/ram/" + VM_NAME + "_tmp"
 ISO_NAME = "/ram/" + VM_NAME + ".iso"
 DISK_NAME = "/ram/" + VM_NAME + ".vdi"
 SUPP_TAG_NAME = get_tag_name(ISO_PATH)
+PKG_DIR, VERSION = SUPP_TAG_NAME.split("-")
+
 # These are all the disk sets, not related to any one version.
 DISK_SETS = "a ap d e f k kde kdei l n t tcl x xap xfce y".split()
 
@@ -134,6 +135,9 @@ def make_shell_parameters():
     fp.write(b'DISK_NAME=%s\n' % DISK_NAME.encode("utf-8"))
     fp.write(b'ISO_NAME=%s\n' % ISO_NAME.encode("utf-8"))
     fp.write(b'TEMP_DIR=%s\n' % TEMP_DIR.encode("utf-8"))
+    fp.write(b'SUPP_TAG_NAME=%s\n' % SUPP_TAG_NAME.encode("utf-8"))
+    fp.write(b'PKG_DIR=%s\n' % PKG_DIR.encode("utf-8"))
+    fp.write(b'VERSION=%s\n' % VERSION.encode("utf-8"))
     fp.close()
 
 
@@ -173,6 +177,10 @@ def remove_boot_timeout():
 # Adapt a Slackware ISO so it boots over serial port
 # And then create a VirtualBox VM to run the ISO.
 
+make_expect_parameters()
+make_shell_parameters()
+
+
 os.system("rm -rf %s" % TEMP_DIR)
 
 # Extract the ISO
@@ -197,7 +205,4 @@ check_call("./installpkg_initrd.py")
 
 explodeinstaller.assemble_all(TEMP_DIR, ISO_NAME)
 
-# Setup parameters for the auto-install expect script:
-make_expect_parameters()
-make_shell_parameters()
 
